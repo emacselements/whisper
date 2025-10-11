@@ -20,6 +20,7 @@ A simple Emacs package that provides speech-to-text functionality using Whisper.
 - Two transcription modes:
   - **Fast mode** (`C-c n`): Uses base.en model for quick transcription
   - **Accurate mode** (`C-c v`): Uses medium.en model for more accurate results
+- **Vocabulary hints**: Provide a custom vocabulary file to improve recognition of proper nouns and specialized terms (e.g., Greek names like Socrates, Alcibiades, Diotima)
 - Automatic transcription using Whisper.cpp
 - Text insertion at cursor position
 - Non-blocking recording with user-controlled stop
@@ -169,6 +170,33 @@ If your Whisper.cpp installation is in a different location, you'll need to modi
 ;; to:
 ;; "/usr/local/bin/whisper-cli -m /path/to/your/model.bin ..."
 ```
+
+### Custom Vocabulary for Proper Nouns
+
+To improve transcription accuracy for proper nouns, technical terms, or specialized vocabulary, create a vocabulary file at `~/.emacs.d/whisper-vocabulary.txt`. This is especially useful for:
+
+- Classical names (Greek, Latin, etc.)
+- Technical jargon
+- Domain-specific terminology
+- Uncommon proper nouns
+
+**The vocabulary file can contain text in any format.** Contextual sentences work best:
+
+**Example `~/.emacs.d/whisper-vocabulary.txt`:**
+```
+Socrates said that Diotima taught him about love. Alcibiades and Phaedrus joined the Symposium in Athens. Aristophanes, Agathon, Pausanias, and Eryximachus discussed philosophy. Diotima explained the nature of Eros to Socrates.
+```
+
+**Why contextual sentences?** Whisper recognizes names better when they appear in natural language context rather than isolated lists.
+
+**Custom vocabulary location:**
+By default, the package looks for `~/.emacs.d/whisper-vocabulary.txt`. To use a different location, set the variable in your `init.el`:
+
+```elisp
+(setq whisper-vocabulary-file "~/Documents/my-vocabulary.txt")
+```
+
+**Note:** The vocabulary feature works with both fast and accurate transcription modes. See [VOCABULARY-GUIDE.md](VOCABULARY-GUIDE.md) for detailed tips and examples.
 
 ## Troubleshooting
 
