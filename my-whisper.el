@@ -12,13 +12,17 @@ You can customize this path by setting it in your init.el:
 
 (defun whisper--get-vocabulary-prompt ()
   "Read vocabulary file and return as a prompt string for Whisper.
-Returns nil if file doesn't exist or is empty."
+Returns nil if file doesn't exist or is empty.
+Warns if content exceeds recommended word limit."
   (when (and whisper-vocabulary-file
              (file-exists-p whisper-vocabulary-file))
     (with-temp-buffer
       (insert-file-contents whisper-vocabulary-file)
-      (let ((content (string-trim (buffer-string))))
+      (let* ((content (string-trim (buffer-string)))
+             (word-count (length (split-string content))))
         (unless (string-empty-p content)
+          (when (> word-count 150)
+            (message "Warning: Vocabulary file has %d words (recommended max: 150). Whisper will truncate to ~224 tokens." word-count))
           content)))))
 
 (defun run-whisper-stt-fast ()

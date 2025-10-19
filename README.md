@@ -202,9 +202,10 @@ Then edit `~/.emacs.d/whisper-vocabulary.txt` to include contextual sentences wi
 **Format tips:**
 - **Use natural sentences** that provide context (not just comma-separated lists)
 - **Place difficult/critical words near the end** - the last ~5 words have the most influence on recognition
-- **Keep total length under 224 tokens** (approximately 150 words maximum) - anything beyond this limit will be truncated
+- **Keep total length under 224 tokens** (approximately 150 words maximum) - anything beyond this limit will be truncated by Whisper
 - Longer prompts are more reliable than very short ones, but don't exceed the token limit
 - Line breaks don't matter - use multiple sentences or paragraphs as you prefer
+- The package will warn you if your vocabulary file exceeds 150 words when you start recording
 
 **Custom vocabulary location:**
 By default, the package looks for `~/.emacs.d/whisper-vocabulary.txt`. To use a different location, set the variable in your `init.el`:
