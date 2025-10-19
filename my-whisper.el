@@ -12,8 +12,18 @@ You can customize this path by setting it in your init.el:
 
 (defun whisper--get-vocabulary-prompt ()
   "Read vocabulary file and return as a prompt string for Whisper.
-Returns nil if file doesn't exist or is empty.
-Warns if content exceeds recommended word limit."
+Returns nil if file doesn't exist or is empty."
+  (when (and whisper-vocabulary-file
+             (file-exists-p whisper-vocabulary-file))
+    (with-temp-buffer
+      (insert-file-contents whisper-vocabulary-file)
+      (let ((content (string-trim (buffer-string))))
+        (unless (string-empty-p content)
+          content)))))
+
+(defun whisper--check-vocabulary-length ()
+  "Check vocabulary file length and return word count.
+Returns nil if file doesn't exist or is empty."
   (when (and whisper-vocabulary-file
              (file-exists-p whisper-vocabulary-file))
     (with-temp-buffer
@@ -21,9 +31,7 @@ Warns if content exceeds recommended word limit."
       (let* ((content (string-trim (buffer-string)))
              (word-count (length (split-string content))))
         (unless (string-empty-p content)
-          (when (> word-count 150)
-            (message "Warning: Vocabulary file has %d words (recommended max: 150). Whisper will truncate to ~224 tokens." word-count))
-          content)))))
+          word-count)))))
 
 (defun run-whisper-stt-fast ()
   "Record audio and transcribe it using Whisper (base.en model - fast), inserting text at cursor position."
@@ -31,20 +39,24 @@ Warns if content exceeds recommended word limit."
   (let* ((original-buf (current-buffer))
          (original-point (point-marker))  ; Marker tracks position even if buffer changes
          (wav-file "/tmp/whisper-recording.wav")
-         (temp-buf (generate-new-buffer " *Whisper Temp*")))
+         (temp-buf (generate-new-buffer " *Whisper Temp*"))
+         (vocab-prompt (whisper--get-vocabulary-prompt))
+         (vocab-word-count (whisper--check-vocabulary-length)))
 
     ;; Start recording audio
     (start-process "record-audio" nil "/bin/sh" "-c"
                    (format "sox -d -r 16000 -c 1 -b 16 %s --no-show-progress 2>/dev/null" wav-file))
-    ;; Inform user recording has started
-    (message "Recording started (fast mode). Press C-g to stop.")
+    ;; Inform user recording has started with vocabulary warning if needed
+    (if (and vocab-word-count (> vocab-word-count 150))
+        (message "Recording started (fast mode). Press C-g to stop. WARNING: Vocabulary file has %d words (max: 150)!" vocab-word-count)
+      (message "Recording started (fast mode). Press C-g to stop."))
     ;; Wait for user to stop (C-g)
     (condition-case nil
         (while t (sit-for 1))
       (quit (interrupt-process "record-audio")))
 
     ;; Run Whisper STT with base.en model
-    (let* ((vocab-prompt (whisper--get-vocabulary-prompt))
+    (let* (
            (whisper-cmd (if vocab-prompt
                             (format "~/whisper.cpp/build/bin/whisper-cli -m ~/whisper.cpp/models/ggml-base.en.bin -f %s -nt -np --prompt \"%s\" 2>/dev/null"
                                     wav-file
@@ -73,20 +85,24 @@ Warns if content exceeds recommended word limit."
   (let* ((original-buf (current-buffer))
          (original-point (point-marker))  ; Marker tracks position even if buffer changes
          (wav-file "/tmp/whisper-recording.wav")
-         (temp-buf (generate-new-buffer " *Whisper Temp*")))
+         (temp-buf (generate-new-buffer " *Whisper Temp*"))
+         (vocab-prompt (whisper--get-vocabulary-prompt))
+         (vocab-word-count (whisper--check-vocabulary-length)))
 
     ;; Start recording audio
     (start-process "record-audio" nil "/bin/sh" "-c"
                    (format "sox -d -r 16000 -c 1 -b 16 %s --no-show-progress 2>/dev/null" wav-file))
-    ;; Inform user recording has started
-    (message "Recording started (accurate mode). Press C-g to stop.")
+    ;; Inform user recording has started with vocabulary warning if needed
+    (if (and vocab-word-count (> vocab-word-count 150))
+        (message "Recording started (accurate mode). Press C-g to stop. WARNING: Vocabulary file has %d words (max: 150)!" vocab-word-count)
+      (message "Recording started (accurate mode). Press C-g to stop."))
     ;; Wait for user to stop (C-g)
     (condition-case nil
         (while t (sit-for 1))
       (quit (interrupt-process "record-audio")))
 
     ;; Run Whisper STT
-    (let* ((vocab-prompt (whisper--get-vocabulary-prompt))
+    (let* (
            (whisper-cmd (if vocab-prompt
                             (format "~/whisper.cpp/build/bin/whisper-cli -m %s -f %s -nt -np --prompt \"%s\" 2>/dev/null"
                                     whisper-model-path wav-file
