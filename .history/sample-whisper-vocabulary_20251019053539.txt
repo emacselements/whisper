@@ -1,0 +1,5 @@
+Glaucon and Adeimantus are not satisfied with Socrates’ refutation of
+Thrasymachus, and the reader sympathizes with them, as he is intended
+to do.
+
+Emacs is my favourite text editor. I use .emacs.d as my default Emacs directory.

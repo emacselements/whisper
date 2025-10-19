@@ -180,11 +180,16 @@ To improve transcription accuracy for proper nouns, technical terms, or speciali
 - Domain-specific terminology
 - Uncommon proper nouns
 
-**Recommended format:** Comma-separated list of words and phrases
+**Recommended format:** Natural contextual sentences work best. Whisper recognizes vocabulary better when proper nouns appear in context rather than simple lists. Place your most critical/difficult words toward the end of the prompt for maximum effect.
 
 **Example `~/.emacs.d/whisper-vocabulary.txt`:**
 ```
-Thrasymachus, Glaucon, Adeimantus, Socrates, Plato, Diotima, Alcibiades, Phaedrus, Aristophanes, Agathon, Pausanias, Eryximachus, Charmides, Critias, Chaerephon, Apollos, Priscilla, Aquila, Piraeus, Mantinea, Acropolis, Athens, Ephesus, Alexandria, Achaia, Aphrodite, Dionysus, Zeus, Hera, Apollo, Eros
+This transcription discusses classical Greek philosophy and biblical studies, including scholars and figures such as Thrasymachus, Eryximachus, Chaerephon, Glaucon, Adeimantus, Socrates, Plato, Diotima, Alcibiades, Phaedrus, Aristophanes, Agathon, Pausanias, Critias, Apollos, Priscilla, and Aquila.
+```
+
+Or for technical discussions:
+```
+The following is a conversation about software development using tools like Emacs, discussing programming languages, frameworks, and technical terms.
 ```
 
 **Quick start:** Copy the sample vocabulary file included in this repository:
@@ -192,7 +197,13 @@ Thrasymachus, Glaucon, Adeimantus, Socrates, Plato, Diotima, Alcibiades, Phaedru
 cp sample-whisper-vocabulary.txt ~/.emacs.d/whisper-vocabulary.txt
 ```
 
-Then edit `~/.emacs.d/whisper-vocabulary.txt` to include the specific proper nouns and terms you use regularly.
+Then edit `~/.emacs.d/whisper-vocabulary.txt` to include contextual sentences with the specific proper nouns and terms you use regularly.
+
+**Format tips:**
+- Use natural sentences that provide context
+- Place difficult/critical words near the end of your prompt
+- Keep total length under 224 tokens (roughly 150-200 words)
+- Longer prompts are more reliable than very short ones
 
 **Custom vocabulary location:**
 By default, the package looks for `~/.emacs.d/whisper-vocabulary.txt`. To use a different location, set the variable in your `init.el`:
@@ -201,7 +212,7 @@ By default, the package looks for `~/.emacs.d/whisper-vocabulary.txt`. To use a 
 (setq whisper-vocabulary-file "~/Documents/my-vocabulary.txt")
 ```
 
-**Note:** The vocabulary feature works with both fast and accurate transcription modes. Vocabulary hints improve recognition but are not guaranteed - transcription accuracy also depends on audio quality and the model used.
+**Note:** The vocabulary feature works with both fast and accurate transcription modes. Vocabulary hints improve recognition but are not guaranteed - transcription accuracy also depends on audio quality and the model used. For best results with difficult proper nouns, use the accurate mode (C-c v) with the medium.en model.
 
 ## Troubleshooting
 
