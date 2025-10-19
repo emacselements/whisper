@@ -173,48 +173,19 @@ If your Whisper.cpp installation is in a different location, you'll need to modi
 
 ### Custom Vocabulary for Proper Nouns
 
-To improve transcription accuracy for proper nouns, technical terms, or specialized vocabulary, create a vocabulary file at `~/.emacs.d/whisper-vocabulary.txt`. This is especially useful for:
-
-- Classical names (Greek, Latin, etc.)
-- Technical jargon
-- Domain-specific terminology
-- Uncommon proper nouns
-
-**Recommended format:** Natural contextual sentences work best. Whisper recognizes vocabulary better when proper nouns appear in context rather than simple lists. Place your most critical/difficult words toward the end of the prompt for maximum effect.
+To improve transcription accuracy for proper nouns, technical terms, or specialized vocabulary, create a vocabulary file at `~/.emacs.d/whisper-vocabulary.txt`.
 
 **Example `~/.emacs.d/whisper-vocabulary.txt`:**
 ```
-This transcription discusses classical Greek philosophy and biblical studies, including scholars and figures such as Thrasymachus, Eryximachus, Chaerephon, Glaucon, Adeimantus, Socrates, Plato, Diotima, Alcibiades, Phaedrus, Aristophanes, Agathon, Pausanias, Critias, Apollos, Priscilla, and Aquila.
+This transcription discusses classical Greek philosophy, including scholars and figures such as Thrasymachus, Socrates, Plato, Diotima, Alcibiades, and Phaedrus.
 ```
-
-Or for technical discussions:
-```
-The following is a conversation about software development using tools like Emacs, discussing programming languages, frameworks, and technical terms.
-```
-
-**Quick start:** Copy the sample vocabulary file included in this repository:
-```bash
-cp sample-whisper-vocabulary.txt ~/.emacs.d/whisper-vocabulary.txt
-```
-
-Then edit `~/.emacs.d/whisper-vocabulary.txt` to include contextual sentences with the specific proper nouns and terms you use regularly.
-
-**Format tips:**
-- **Use natural sentences** that provide context (not just comma-separated lists)
-- **Place difficult/critical words near the end** - the last ~5 words have the most influence on recognition
-- **Keep total length under 224 tokens** (approximately 150 words maximum) - anything beyond this limit will be truncated by Whisper
-- Longer prompts are more reliable than very short ones, but don't exceed the token limit
-- Line breaks don't matter - use multiple sentences or paragraphs as you prefer
-- The package will warn you if your vocabulary file exceeds 150 words when you start recording
 
 **Custom vocabulary location:**
-By default, the package looks for `~/.emacs.d/whisper-vocabulary.txt`. To use a different location, set the variable in your `init.el`:
-
 ```elisp
 (setq whisper-vocabulary-file "~/Documents/my-vocabulary.txt")
 ```
 
-**Note:** The vocabulary feature works with both fast and accurate transcription modes. Vocabulary hints improve recognition but are not guaranteed - transcription accuracy also depends on audio quality and the model used. For best results with difficult proper nouns, use the accurate mode (C-c v) with the medium.en model.
+**For detailed guidance** on vocabulary formats, tips, domain-specific examples, and managing multiple vocabularies, see [VOCABULARY-GUIDE.md](VOCABULARY-GUIDE.md).
 
 ## Troubleshooting
 
