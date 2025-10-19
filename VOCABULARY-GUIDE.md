@@ -38,21 +38,26 @@ Socrates learned about love from Diotima, a wise woman from Mantinea.
 
 ## Tips for Better Recognition
 
-1. **Repeat difficult names** - Use problematic names multiple times in different contexts
-2. **Add context** - Place names in natural sentences related to your subject matter
-3. **Test and iterate** - If a name is still misrecognized, add more examples with that specific name
-4. **Keep it relevant** - Focus on terms you're actually using in your current work
+1. **Use natural sentences** - Whisper recognizes vocabulary better when proper nouns appear in context rather than simple lists
+2. **Place critical words at the end** - The last ~5 words have the most influence on recognition
+3. **Stay within limits** - Keep total length under 224 tokens (approximately **150 words maximum**) - anything beyond this limit will be truncated by Whisper
+4. **Repeat difficult names** - Use problematic names multiple times in different contexts
+5. **Add context** - Place names in natural sentences related to your subject matter
+6. **Test and iterate** - If a name is still misrecognized, add more examples with that specific name
+7. **Keep it relevant** - Focus on terms you're actually using in your current work
+
+**Word Count Warning:** The package will warn you if your vocabulary file exceeds 150 words when you start recording.
 
 ## Examples by Domain
 
 ### Classical Philosophy
 ```
-Socrates said that Diotima taught him about love. Alcibiades and Phaedrus joined the Symposium in Athens. Aristophanes, Agathon, Pausanias, and Eryximachus discussed philosophy.
+This transcription discusses classical Greek philosophy, including scholars and figures such as Thrasymachus, Eryximachus, Chaerephon, Glaucon, Adeimantus, Socrates, Plato, Diotima, Alcibiades, Phaedrus, Aristophanes, Agathon, Pausanias, and Critias.
 ```
 
 ### Technical/Programming
 ```
-Kubernetes orchestrates Docker containers. PostgreSQL database with SQLAlchemy ORM. FastAPI endpoints using Pydantic models.
+The following is a conversation about software development using tools like Emacs, discussing programming languages, frameworks, and technical terms.
 ```
 
 ### Medical Terminology
@@ -87,7 +92,7 @@ Then switch vocabularies as needed with `M-x my-use-symposium-vocab`.
 - Try pronouncing the name more clearly or closer to standard pronunciation
 
 **Transcription seems slower?**
-- The vocabulary file may be too large. Keep it focused on current reading/topic (recommended: under 1000 characters)
+- The vocabulary file may be too large. Keep it focused on current reading/topic (recommended: under 150 words / 224 tokens)
 
 **File not being loaded?**
 - Check the file path: The default is `~/.emacs.d/whisper-vocabulary.txt`
