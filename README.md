@@ -180,14 +180,19 @@ To improve transcription accuracy for proper nouns, technical terms, or speciali
 - Domain-specific terminology
 - Uncommon proper nouns
 
-**The vocabulary file can contain text in any format.** Contextual sentences work best:
+**Recommended format:** Comma-separated list of words and phrases
 
 **Example `~/.emacs.d/whisper-vocabulary.txt`:**
 ```
-Socrates said that Diotima taught him about love. Alcibiades and Phaedrus joined the Symposium in Athens. Aristophanes, Agathon, Pausanias, and Eryximachus discussed philosophy. Diotima explained the nature of Eros to Socrates.
+Thrasymachus, Glaucon, Adeimantus, Socrates, Plato, Diotima, Alcibiades, Phaedrus, Aristophanes, Agathon, Pausanias, Eryximachus, Charmides, Critias, Chaerephon, Apollos, Priscilla, Aquila, Piraeus, Mantinea, Acropolis, Athens, Ephesus, Alexandria, Achaia, Aphrodite, Dionysus, Zeus, Hera, Apollo, Eros
 ```
 
-**Why contextual sentences?** Whisper recognizes names better when they appear in natural language context rather than isolated lists.
+**Quick start:** Copy the sample vocabulary file included in this repository:
+```bash
+cp sample-whisper-vocabulary.txt ~/.emacs.d/whisper-vocabulary.txt
+```
+
+Then edit `~/.emacs.d/whisper-vocabulary.txt` to include the specific proper nouns and terms you use regularly.
 
 **Custom vocabulary location:**
 By default, the package looks for `~/.emacs.d/whisper-vocabulary.txt`. To use a different location, set the variable in your `init.el`:
@@ -196,7 +201,7 @@ By default, the package looks for `~/.emacs.d/whisper-vocabulary.txt`. To use a 
 (setq whisper-vocabulary-file "~/Documents/my-vocabulary.txt")
 ```
 
-**Note:** The vocabulary feature works with both fast and accurate transcription modes. See [VOCABULARY-GUIDE.md](VOCABULARY-GUIDE.md) for detailed tips and examples.
+**Note:** The vocabulary feature works with both fast and accurate transcription modes. Vocabulary hints improve recognition but are not guaranteed - transcription accuracy also depends on audio quality and the model used.
 
 ## Troubleshooting
 
