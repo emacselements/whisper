@@ -200,10 +200,11 @@ cp sample-whisper-vocabulary.txt ~/.emacs.d/whisper-vocabulary.txt
 Then edit `~/.emacs.d/whisper-vocabulary.txt` to include contextual sentences with the specific proper nouns and terms you use regularly.
 
 **Format tips:**
-- Use natural sentences that provide context
-- Place difficult/critical words near the end of your prompt
-- Keep total length under 224 tokens (roughly 150-200 words)
-- Longer prompts are more reliable than very short ones
+- **Use natural sentences** that provide context (not just comma-separated lists)
+- **Place difficult/critical words near the end** - the last ~5 words have the most influence on recognition
+- **Keep total length under 224 tokens** (approximately 150 words maximum) - anything beyond this limit will be truncated
+- Longer prompts are more reliable than very short ones, but don't exceed the token limit
+- Line breaks don't matter - use multiple sentences or paragraphs as you prefer
 
 **Custom vocabulary location:**
 By default, the package looks for `~/.emacs.d/whisper-vocabulary.txt`. To use a different location, set the variable in your `init.el`:
