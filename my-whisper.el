@@ -1,5 +1,5 @@
 ;; -*- lexical-binding: t; -*-
-;; Author: Rari Comninos
+;; Author: Raoul Comninos
 
 (defvar whisper-model-path "~/whisper.cpp/models/ggml-medium.en.bin"
   "Path to the Whisper model to use for transcription. Larger models are more accurate.")
@@ -9,10 +9,6 @@
 The file should contain comma-separated words/phrases that Whisper should recognize.
 You can customize this path by setting it in your init.el:
   (setq whisper-vocabulary-file \"/path/to/your/vocabulary.txt\")")
-
-(defvar whisper-auto-proofread t
-  "When non-nil, automatically proofread transcribed text using chatgpt-shell-proofread-region.
-Set to nil to disable automatic proofreading.")
 
 (defun whisper--get-vocabulary-prompt ()
   "Read vocabulary file and return as a prompt string for Whisper.
@@ -78,18 +74,8 @@ Returns nil if file doesn't exist or is empty."
                 (when (buffer-live-p ,original-buf)
                   (with-current-buffer ,original-buf
                     (goto-char ,original-point)
-                    (let ((start-pos (point)))
-                      (insert output " ")  ;; Insert text with a single space after
-                      (let ((end-pos (point)))
-                        ;; Automatically proofread if enabled
-                        (when (and whisper-auto-proofread
-                                   (fboundp 'chatgpt-shell-proofread-region))
-                          (set-mark start-pos)
-                          (goto-char end-pos)
-                          (activate-mark)
-                          (chatgpt-shell-proofread-region)
-                          (deactivate-mark))
-                        (goto-char end-pos)))))) ;; Move cursor to end of inserted text
+                    (insert output " ")  ;; Insert text with a single space after
+                    (goto-char (point))))) ;; Move cursor to end of inserted text
               ;; Clean up temporary buffer
               (kill-buffer ,temp-buf))))))))
 
@@ -136,18 +122,8 @@ Returns nil if file doesn't exist or is empty."
                     (when (buffer-live-p ,original-buf)
                       (with-current-buffer ,original-buf
                         (goto-char ,original-point)
-                        (let ((start-pos (point)))
-                          (insert output " ")
-                          (let ((end-pos (point)))
-                            ;; Automatically proofread if enabled
-                            (when (and whisper-auto-proofread
-                                       (fboundp 'chatgpt-shell-proofread-region))
-                              (set-mark start-pos)
-                              (goto-char end-pos)
-                              (activate-mark)
-                              (chatgpt-shell-proofread-region)
-                              (deactivate-mark))
-                            (goto-char end-pos)))))))
+                        (insert output " ")
+                        (goto-char (point))))))
                 (kill-buffer ,temp-buf)
                 (when (file-exists-p ,wav-file)
                   (delete-file ,wav-file)))
