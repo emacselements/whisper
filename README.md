@@ -111,8 +111,8 @@ If you use `use-package`, add this to your `init.el`:
 ```elisp
 (use-package my-whisper
   :load-path "~/.emacs.d/my-whisper"
-  :bind (("C-c v" . run-whisper-stt)
-         ("C-c n" . run-whisper-stt-fast)))
+  :bind (("C-c v" . my-whisper-transcribe-fast)
+         ("C-c n" . my-whisper-transcribe)))
 ```
 
 ## Usage
@@ -146,17 +146,17 @@ To change the key bindings, modify your `init.el`:
 
 ```elisp
 ;; Use different key bindings
-(global-set-key (kbd "C-c s") 'run-whisper-stt-fast)  ; Fast mode
-(global-set-key (kbd "C-c S") 'run-whisper-stt)       ; Accurate mode
+(global-set-key (kbd "C-c s") #'my-whisper-transcribe-fast)  ; Fast mode
+(global-set-key (kbd "C-c S") #'my-whisper-transcribe)       ; Accurate mode
 ```
 
 ### Custom Model Path
 
-To use a different model for accurate mode, set the `whisper-model-path` variable in your `init.el`:
+To use a different model for accurate mode, set the `my-whisper-model-path` variable in your `init.el`:
 
 ```elisp
 ;; Use a different model (e.g., large model for even better accuracy)
-(setq whisper-model-path "~/whisper.cpp/models/ggml-large.en.bin")
+(setq my-whisper-model-path "~/whisper.cpp/models/ggml-large.en.bin")
 ```
 
 ### Custom Paths
@@ -182,7 +182,7 @@ This transcription discusses classical Greek philosophy, including scholars and 
 
 **Custom vocabulary location:**
 ```elisp
-(setq whisper-vocabulary-file "~/Documents/my-vocabulary.txt")
+(setq my-whisper-vocabulary-file "~/Documents/my-vocabulary.txt")
 ```
 
 **For detailed guidance** on vocabulary formats, tips, domain-specific examples, and managing multiple vocabularies, see [VOCABULARY-GUIDE.md](VOCABULARY-GUIDE.md).
@@ -236,4 +236,4 @@ This project is released under the MIT License.
 
 ## Contributing
 
-Feel free to submit issues and pull requests to improve this package.# my-whisper
+Feel free to submit issues and pull requests to improve this package.

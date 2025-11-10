@@ -1,47 +1,106 @@
-;; -*- lexical-binding: t; -*-
+;;; my-whisper.el --- Speech-to-text using Whisper.cpp -*- lexical-binding: t -*-
+
+;; Copyright (C) 2025 Raoul Comninos
+
 ;; Author: Raoul Comninos
+;; Version: 1.0.0
+;; Package-Requires: ((emacs "25.1"))
+;; Keywords: convenience, speech, whisper, transcription
+;; URL: https://github.com/emacselements/my-whisper
+;; SPDX-License-Identifier: MIT
 
-(defvar whisper-model-path "~/whisper.cpp/models/ggml-medium.en.bin"
-  "Path to the Whisper model to use for transcription. Larger models are more accurate.")
+;; This file is not part of GNU Emacs.
 
-(defvar whisper-vocabulary-file (expand-file-name "~/.emacs.d/whisper-vocabulary.txt")
-  "Path to file containing vocabulary hints for Whisper (proper nouns, specialized terms, etc.).
-The file should contain comma-separated words/phrases that Whisper should recognize.
-You can customize this path by setting it in your init.el:
-  (setq whisper-vocabulary-file \"/path/to/your/vocabulary.txt\")")
+;; Permission is hereby granted, free of charge, to any person obtaining
+;; a copy of this software and associated documentation files (the
+;; "Software"), to deal in the Software without restriction, including
+;; without limitation the rights to use, copy, modify, merge, publish,
+;; distribute, sublicense, and/or sell copies of the Software, and to
+;; permit persons to whom the Software is furnished to do so, subject to
+;; the following conditions:
 
-(defun whisper--get-vocabulary-prompt ()
+;; The above copyright notice and this permission notice shall be
+;; included in all copies or substantial portions of the Software.
+
+;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+;; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+;; IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+;; CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+;; TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+;; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+;;; Commentary:
+
+;; My-Whisper provides simple speech-to-text transcription using
+;; Whisper.cpp.  It records audio via sox and transcribes it using
+;; Whisper models, inserting the transcribed text at your cursor.
+
+;; Features:
+;; - Two transcription modes: fast (base.en) and accurate (medium.en)
+;; - Custom vocabulary support for specialized terminology
+;; - Automatic vocabulary length validation
+;; - Async processing with process sentinels
+;; - Clean temporary file management
+
+;; Basic usage:
+;;   M-x my-whisper-transcribe-fast  ; Fast mode (base.en model)
+;;   M-x my-whisper-transcribe       ; Accurate mode (medium.en)
+
+;; Default keybindings:
+;;   C-c v - Fast transcription
+;;   C-c n - Accurate transcription
+
+;; See the README for installation and configuration details.
+
+;;; Code:
+
+(defvar my-whisper-model-path "~/whisper.cpp/models/ggml-medium.en.bin"
+  "Path to the Whisper model to use for transcription.
+Larger models are more accurate.")
+
+(defvar my-whisper-vocabulary-file (expand-file-name "~/.emacs.d/whisper-vocabulary.txt")
+  "Path to file containing vocabulary hints for Whisper.
+This should contain proper nouns, specialized terms, etc.
+The file should contain comma-separated words/phrases that Whisper
+should recognize.  You can customize this path by setting it in your
+init.el:
+  (setq my-whisper-vocabulary-file \"/path/to/your/vocabulary.txt\")")
+
+(defun my-whisper--get-vocabulary-prompt ()
   "Read vocabulary file and return as a prompt string for Whisper.
 Returns nil if file doesn't exist or is empty."
-  (when (and whisper-vocabulary-file
-             (file-exists-p whisper-vocabulary-file))
+  (when (and my-whisper-vocabulary-file
+             (file-exists-p my-whisper-vocabulary-file))
     (with-temp-buffer
-      (insert-file-contents whisper-vocabulary-file)
+      (insert-file-contents my-whisper-vocabulary-file)
       (let ((content (string-trim (buffer-string))))
         (unless (string-empty-p content)
           content)))))
 
-(defun whisper--check-vocabulary-length ()
+(defun my-whisper--check-vocabulary-length ()
   "Check vocabulary file length and return word count.
 Returns nil if file doesn't exist or is empty."
-  (when (and whisper-vocabulary-file
-             (file-exists-p whisper-vocabulary-file))
+  (when (and my-whisper-vocabulary-file
+             (file-exists-p my-whisper-vocabulary-file))
     (with-temp-buffer
-      (insert-file-contents whisper-vocabulary-file)
+      (insert-file-contents my-whisper-vocabulary-file)
       (let* ((content (string-trim (buffer-string)))
              (word-count (length (split-string content))))
         (unless (string-empty-p content)
           word-count)))))
 
-(defun run-whisper-stt-fast ()
-  "Record audio and transcribe it using Whisper (base.en model - fast), inserting text at cursor position."
+(defun my-whisper-transcribe-fast ()
+  "Record audio and transcribe using Whisper base.en model (fast).
+Records audio until you press \\[keyboard-quit], then transcribes it
+and inserts the text at point."
   (interactive)
   (let* ((original-buf (current-buffer))
          (original-point (point-marker))  ; Marker tracks position even if buffer changes
          (wav-file "/tmp/whisper-recording.wav")
          (temp-buf (generate-new-buffer " *Whisper Temp*"))
-         (vocab-prompt (whisper--get-vocabulary-prompt))
-         (vocab-word-count (whisper--check-vocabulary-length)))
+         (vocab-prompt (my-whisper--get-vocabulary-prompt))
+         (vocab-word-count (my-whisper--check-vocabulary-length)))
 
     ;; Start recording audio
     (start-process "record-audio" nil "/bin/sh" "-c"
@@ -79,15 +138,18 @@ Returns nil if file doesn't exist or is empty."
               ;; Clean up temporary buffer
               (kill-buffer ,temp-buf))))))))
 
-(defun run-whisper-stt ()
-  "Record audio and transcribe it using Whisper (configurable model - more accurate), inserting text at cursor position."
+(defun my-whisper-transcribe ()
+  "Record audio and transcribe using configurable Whisper model (accurate).
+Uses the model specified in `my-whisper-model-path'.  Records audio
+until you press \\[keyboard-quit], then transcribes it and inserts the
+text at point."
   (interactive)
   (let* ((original-buf (current-buffer))
          (original-point (point-marker))  ; Marker tracks position even if buffer changes
          (wav-file "/tmp/whisper-recording.wav")
          (temp-buf (generate-new-buffer " *Whisper Temp*"))
-         (vocab-prompt (whisper--get-vocabulary-prompt))
-         (vocab-word-count (whisper--check-vocabulary-length)))
+         (vocab-prompt (my-whisper--get-vocabulary-prompt))
+         (vocab-word-count (my-whisper--check-vocabulary-length)))
 
     ;; Start recording audio
     (start-process "record-audio" nil "/bin/sh" "-c"
@@ -105,10 +167,10 @@ Returns nil if file doesn't exist or is empty."
     (let* (
            (whisper-cmd (if vocab-prompt
                             (format "~/whisper.cpp/build/bin/whisper-cli -m %s -f %s -nt -np --prompt \"%s\" 2>/dev/null"
-                                    whisper-model-path wav-file
+                                    my-whisper-model-path wav-file
                                     (replace-regexp-in-string "\"" "\\\\\"" vocab-prompt))
                           (format "~/whisper.cpp/build/bin/whisper-cli -m %s -f %s -nt -np 2>/dev/null"
-                                  whisper-model-path wav-file)))
+                                  my-whisper-model-path wav-file)))
            (proc (start-process "whisper-stt" temp-buf "/bin/sh" "-c" whisper-cmd)))
       ;; Properly capture `temp-buf` using a lambda
       (set-process-sentinel
@@ -129,7 +191,8 @@ Returns nil if file doesn't exist or is empty."
                   (delete-file ,wav-file)))
             (message "Whisper process error: %s" event)))))))
 
-(global-set-key (kbd "C-c v") 'run-whisper-stt-fast)
-(global-set-key (kbd "C-c n") 'run-whisper-stt)
+(global-set-key (kbd "C-c v") #'my-whisper-transcribe-fast)
+(global-set-key (kbd "C-c n") #'my-whisper-transcribe)
 
 (provide 'my-whisper)
+;;; my-whisper.el ends here
