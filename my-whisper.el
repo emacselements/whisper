@@ -55,17 +55,51 @@
 
 ;;; Code:
 
-(defvar my-whisper-model-path "~/whisper.cpp/models/ggml-medium.en.bin"
-  "Path to the Whisper model to use for transcription.
-Larger models are more accurate.")
+(defgroup my-whisper nil
+  "Speech-to-text using Whisper.cpp system."
+  :group 'convenience
+  :link '(url-link :tag "my-whisper @ Github"
+                   "https://github.com/emacselements/my-whisper"))
 
-(defvar my-whisper-vocabulary-file (expand-file-name "~/.emacs.d/whisper-vocabulary.txt")
+
+(defcustom my-whisper-homedir "~/whisper.cpp/"
+  "The whisper.cpp top directory."
+  :group 'my-whisper
+  :type 'directory)
+
+(defcustom my-whisper-model "ggml-base.en.bin"
+  "Whisper Model.
+
+Select one of the following:
+- 1: Base model,   fast mode:     ggml-base.en.bin
+- 2: Medium model, accurate mode: ggml-medium.en.bin
+- 3: Other: specify the file name."
+  :group 'my-whisper
+  :type '(choice
+          (const :tag "Base model: fast mode" "ggml-base.en.bin")
+          (const :tag "Medium model: accurate mode" "ggml-medium.en.bin")
+          (string :tag "Other")))
+
+(defconst my-whisper-cli  (format "%s/build/bin/whisper-cli"
+                                   (directory-file-name my-whisper-homedir))
+  "Path name of the whisper-cli.")
+
+(defconst my-whisper-model-path (format "%s/models/%s"
+                                    (directory-file-name my-whisper-homedir)
+                                    my-whisper-model)
+  "Path name of the whisper model.")
+
+
+(defcustom my-whisper-vocabulary-file (expand-file-name (locate-user-emacs-file "whisper-vocabulary.txt"))
   "Path to file containing vocabulary hints for Whisper.
 This should contain proper nouns, specialized terms, etc.
 The file should contain comma-separated words/phrases that Whisper
-should recognize.  You can customize this path by setting it in your
-init.el:
-  (setq my-whisper-vocabulary-file \"/path/to/your/vocabulary.txt\")")
+should recognize.
+
+You can either customize this path or set it in your init.el:
+  (setq my-whisper-vocabulary-file \"/path/to/your/vocabulary.txt\")"
+  :group 'my-whisper
+  :type 'directory)
 
 (defun my-whisper--get-vocabulary-prompt ()
   "Read vocabulary file and return as a prompt string for Whisper.
@@ -117,10 +151,14 @@ and inserts the text at point."
     ;; Run Whisper STT with base.en model
     (let* (
            (whisper-cmd (if vocab-prompt
-                            (format "~/whisper.cpp/build/bin/whisper-cli -m ~/whisper.cpp/models/ggml-base.en.bin -f %s -nt -np --prompt \"%s\" 2>/dev/null"
+                            (format "%s -m %s -f %s -nt -np --prompt \"%s\" 2>/dev/null"
+                                    my-whisper-cli
+                                    my-whisper-model-path
                                     wav-file
                                     (replace-regexp-in-string "\"" "\\\\\"" vocab-prompt))
-                          (format "~/whisper.cpp/build/bin/whisper-cli -m ~/whisper.cpp/models/ggml-base.en.bin -f %s -nt -np 2>/dev/null"
+                          (format "%s -m %s -f %s -nt -np 2>/dev/null"
+                                  my-whisper-cli
+                                  my-whisper-model-path
                                   wav-file)))
            (proc (start-process "whisper-stt" temp-buf "/bin/sh" "-c" whisper-cmd)))
       ;; Properly capture `temp-buf` using a lambda
@@ -166,11 +204,15 @@ text at point."
     ;; Run Whisper STT
     (let* (
            (whisper-cmd (if vocab-prompt
-                            (format "~/whisper.cpp/build/bin/whisper-cli -m %s -f %s -nt -np --prompt \"%s\" 2>/dev/null"
-                                    my-whisper-model-path wav-file
+                            (format "%s -m %s -f %s -nt -np --prompt \"%s\" 2>/dev/null"
+                                    my-whisper-cli
+                                    my-whisper-model-path
+                                    wav-file
                                     (replace-regexp-in-string "\"" "\\\\\"" vocab-prompt))
-                          (format "~/whisper.cpp/build/bin/whisper-cli -m %s -f %s -nt -np 2>/dev/null"
-                                  my-whisper-model-path wav-file)))
+                          (format "%s -m %s -f %s -nt -np 2>/dev/null"
+                                  my-whisper-cli
+                                  my-whisper-model-path
+                                  wav-file)))
            (proc (start-process "whisper-stt" temp-buf "/bin/sh" "-c" whisper-cmd)))
       ;; Properly capture `temp-buf` using a lambda
       (set-process-sentinel
