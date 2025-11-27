@@ -55,17 +55,51 @@
 
 ;;; Code:
 
-(defvar my-whisper-model-path "~/whisper.cpp/models/ggml-medium.en.bin"
-  "Path to the Whisper model to use for transcription.
-Larger models are more accurate.")
+(defgroup my-whisper nil
+  "Speech-to-text using Whisper.cpp system."
+  :group 'convenience
+  :link '(url-link :tag "my-whisper @ Github"
+                   "https://github.com/emacselements/my-whisper"))
 
-(defvar my-whisper-vocabulary-file (expand-file-name "~/.emacs.d/whisper-vocabulary.txt")
+
+(defcustom my-whisper-homedir "~/whisper.cpp/"
+  "The whisper.cpp top directory."
+  :group 'my-whisper
+  :type 'directory)
+
+(defcustom my-whisper-model "ggml-base.en.bin"
+  "Whisper Model.
+
+Select one of the following:
+- 1: Base model,   fast mode:     ggml-base.en.bin
+- 2: Medium model, accurate mode: ggml-medium.en.bin
+- 3: Other: specify the file name."
+  :group 'my-whisper
+  :type '(choice
+          (const :tag "Base model: fast mode" "ggml-base.en.bin")
+          (const :tag "Medium model: accurate mode" "ggml-medium.en.bin")
+          (string :tag "Other")))
+
+(defconst my-whisper-cli  (format "%s/build/bin/whisper-cli"
+                                   (directory-file-name my-whisper-homedir))
+  "Path name of the whisper-cli.")
+
+(defconst my-whisper-model-path (format "%s/models/%s"
+                                    (directory-file-name my-whisper-homedir)
+                                    my-whisper-model)
+  "Path name of the whisper model.")
+
+
+(defcustom my-whisper-vocabulary-file (expand-file-name (locate-user-emacs-file "whisper-vocabulary.txt"))
   "Path to file containing vocabulary hints for Whisper.
 This should contain proper nouns, specialized terms, etc.
 The file should contain comma-separated words/phrases that Whisper
-should recognize.  You can customize this path by setting it in your
-init.el:
-  (setq my-whisper-vocabulary-file \"/path/to/your/vocabulary.txt\")")
+should recognize.
+
+You can either customize this path or set it in your init.el:
+  (setq my-whisper-vocabulary-file \"/path/to/your/vocabulary.txt\")"
+  :group 'my-whisper
+  :type 'directory)
 
 (defun my-whisper--get-vocabulary-prompt ()
   "Read vocabulary file and return as a prompt string for Whisper.
@@ -90,14 +124,28 @@ Returns nil if file doesn't exist or is empty."
         (unless (string-empty-p content)
           word-count)))))
 
+(defun my-whisper--validate-environment ()
+  "Validate current settings.  Issue a user error if something is wrong."
+  (unless (file-directory-p my-whisper-homedir)
+    (user-error "Invalid my-whisper-homedir (%s)" my-whisper-homedir))
+  (unless (file-executable-p my-whisper-cli)
+    (if (file-exists-p my-whisper-cli)
+        (user-error "my-whisper-cli (%s) is not an executable file"
+                    my-whisper-cli))
+    (user-error "my-whisper-cli (%s) does not exist" my-whisper-cli))
+  (unless (file-exists-p my-whisper-model-path)
+    (user-error "my-whisper-model-path (%s) does not exist"
+                my-whisper-model-path)))
+
 (defun my-whisper-transcribe-fast ()
   "Record audio and transcribe using Whisper base.en model (fast).
 Records audio until you press \\[keyboard-quit], then transcribes it
 and inserts the text at point."
   (interactive)
+  (my-whisper--validate-environment)
   (let* ((original-buf (current-buffer))
-         (original-point (point-marker))  ; Marker tracks position even if buffer changes
-         (wav-file "/tmp/whisper-recording.wav")
+         (original-point (point-marker)) ; Marker tracks position even if buffer changes
+         (wav-file (format "/tmp/whisper-recording-%s.wav" (emacs-pid)))
          (temp-buf (generate-new-buffer " *Whisper Temp*"))
          (vocab-prompt (my-whisper--get-vocabulary-prompt))
          (vocab-word-count (my-whisper--check-vocabulary-length)))
@@ -115,12 +163,15 @@ and inserts the text at point."
       (quit (interrupt-process "record-audio")))
 
     ;; Run Whisper STT with base.en model
-    (let* (
-           (whisper-cmd (if vocab-prompt
-                            (format "~/whisper.cpp/build/bin/whisper-cli -m ~/whisper.cpp/models/ggml-base.en.bin -f %s -nt -np --prompt \"%s\" 2>/dev/null"
+    (let* ((whisper-cmd (if vocab-prompt
+                            (format "%s -m %s -f %s -nt -np --prompt \"%s\" 2>/dev/null"
+                                    my-whisper-cli
+                                    my-whisper-model-path
                                     wav-file
                                     (replace-regexp-in-string "\"" "\\\\\"" vocab-prompt))
-                          (format "~/whisper.cpp/build/bin/whisper-cli -m ~/whisper.cpp/models/ggml-base.en.bin -f %s -nt -np 2>/dev/null"
+                          (format "%s -m %s -f %s -nt -np 2>/dev/null"
+                                  my-whisper-cli
+                                  my-whisper-model-path
                                   wav-file)))
            (proc (start-process "whisper-stt" temp-buf "/bin/sh" "-c" whisper-cmd)))
       ;; Properly capture `temp-buf` using a lambda
@@ -133,7 +184,7 @@ and inserts the text at point."
                 (when (buffer-live-p ,original-buf)
                   (with-current-buffer ,original-buf
                     (goto-char ,original-point)
-                    (insert output " ")  ;; Insert text with a single space after
+                    (insert output " ") ;; Insert text with a single space after
                     (goto-char (point))))) ;; Move cursor to end of inserted text
               ;; Clean up temporary buffer
               (kill-buffer ,temp-buf))))))))
@@ -144,9 +195,10 @@ Uses the model specified in `my-whisper-model-path'.  Records audio
 until you press \\[keyboard-quit], then transcribes it and inserts the
 text at point."
   (interactive)
+  (my-whisper--validate-environment)
   (let* ((original-buf (current-buffer))
-         (original-point (point-marker))  ; Marker tracks position even if buffer changes
-         (wav-file "/tmp/whisper-recording.wav")
+         (original-point (point-marker)) ; Marker tracks position even if buffer changes
+         (wav-file (format "/tmp/whisper-recording-%s.wav" (emacs-pid)))
          (temp-buf (generate-new-buffer " *Whisper Temp*"))
          (vocab-prompt (my-whisper--get-vocabulary-prompt))
          (vocab-word-count (my-whisper--check-vocabulary-length)))
@@ -164,13 +216,16 @@ text at point."
       (quit (interrupt-process "record-audio")))
 
     ;; Run Whisper STT
-    (let* (
-           (whisper-cmd (if vocab-prompt
-                            (format "~/whisper.cpp/build/bin/whisper-cli -m %s -f %s -nt -np --prompt \"%s\" 2>/dev/null"
-                                    my-whisper-model-path wav-file
+    (let* ((whisper-cmd (if vocab-prompt
+                            (format "%s -m %s -f %s -nt -np --prompt \"%s\" 2>/dev/null"
+                                    my-whisper-cli
+                                    my-whisper-model-path
+                                    wav-file
                                     (replace-regexp-in-string "\"" "\\\\\"" vocab-prompt))
-                          (format "~/whisper.cpp/build/bin/whisper-cli -m %s -f %s -nt -np 2>/dev/null"
-                                  my-whisper-model-path wav-file)))
+                          (format "%s -m %s -f %s -nt -np 2>/dev/null"
+                                  my-whisper-cli
+                                  my-whisper-model-path
+                                  wav-file)))
            (proc (start-process "whisper-stt" temp-buf "/bin/sh" "-c" whisper-cmd)))
       ;; Properly capture `temp-buf` using a lambda
       (set-process-sentinel
