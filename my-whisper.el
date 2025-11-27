@@ -240,7 +240,7 @@ the text at point."
                         (insert output " ")))))
                 ;; Clean up temporary buffer
                 (kill-buffer ,temp-buf)
-                And delete WAV file that has been processed.
+                ;; And delete WAV file that has been processed.
                 (when (file-exists-p ,wav-file)
                   (delete-file ,wav-file)))
             ;; No detection of end: error!
