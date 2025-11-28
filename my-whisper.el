@@ -251,9 +251,9 @@ the text at point."
             (if (string= event "finished\n")
                 (when (buffer-live-p temp-buf)
                   ;; Trim excess white space
-                  (let* ((output (string-trim
-                                  (with-current-buffer temp-buf
-                                    (buffer-string)))))
+                  (let ((output (string-trim
+                                 (with-current-buffer temp-buf
+                                   (buffer-string)))))
                     (if (string-empty-p output)
                         (message "Whisper: No transcription output.")
                       (when (buffer-live-p original-buf)
