@@ -247,25 +247,25 @@ the text at point."
         ;; Properly capture `temp-buf` using a lambda
         (set-process-sentinel
          proc
-         `(lambda (proc event)
+         (lambda (_proc event)
             (if (string= event "finished\n")
-                (when (buffer-live-p ,temp-buf)
+                (when (buffer-live-p temp-buf)
                   ;; Trim excess white space
                   (let* ((output (string-trim
-                                  (with-current-buffer ,temp-buf
+                                  (with-current-buffer temp-buf
                                     (buffer-string)))))
                     (if (string-empty-p output)
                         (message "Whisper: No transcription output.")
-                      (when (buffer-live-p ,original-buf)
-                        (with-current-buffer ,original-buf
-                          (goto-char ,original-point)
+                      (when (buffer-live-p original-buf)
+                        (with-current-buffer original-buf
+                          (goto-char original-point)
                           ;; Insert text, then a single space
                           (insert output " ")))))
                   ;; Clean up temporary buffer
-                  (kill-buffer ,temp-buf)
+                  (kill-buffer temp-buf)
                   ;; And delete WAV file that has been processed.
-                  (when (file-exists-p ,wav-file)
-                    (delete-file ,wav-file)))
+                  (when (file-exists-p wav-file)
+                    (delete-file wav-file)))
               ;; No detection of end: error!
               (message "Whisper process error: %s" event))))))))
 
