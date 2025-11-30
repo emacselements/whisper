@@ -114,6 +114,10 @@ and inserts the text at point."
         (while t (sit-for 1))
       (quit (interrupt-process "record-audio")))
 
+    (run-at-time 0.2 nil
+                 (lambda ()
+                   (message "Processing transcription, please wait...")))
+
     ;; Run Whisper STT with base.en model
     (let* (
            (whisper-cmd (if vocab-prompt
@@ -130,11 +134,14 @@ and inserts the text at point."
           (when (string= event "finished\n")
             (when (buffer-live-p ,temp-buf)
               (let* ((output (string-trim (with-current-buffer ,temp-buf (buffer-string))))) ;; Trim excess whitespace
-                (when (buffer-live-p ,original-buf)
-                  (with-current-buffer ,original-buf
-                    (goto-char ,original-point)
-                    (insert output " ")  ;; Insert text with a single space after
-                    (goto-char (point))))) ;; Move cursor to end of inserted text
+                (if (string-empty-p output)
+                    (message "Whisper: No transcription output.")
+                  (when (buffer-live-p ,original-buf)
+                    (with-current-buffer ,original-buf
+                      (goto-char ,original-point)
+                      (insert output " ")  ;; Insert text with a single space after
+                      (goto-char (point))))
+                  (message "Transcription complete!")))
               ;; Clean up temporary buffer
               (kill-buffer ,temp-buf))))))))
 
@@ -163,6 +170,10 @@ text at point."
         (while t (sit-for 1))
       (quit (interrupt-process "record-audio")))
 
+    (run-at-time 0.2 nil
+                 (lambda ()
+                   (message "Processing transcription, please wait...")))
+
     ;; Run Whisper STT
     (let* (
            (whisper-cmd (if vocab-prompt
@@ -185,7 +196,8 @@ text at point."
                       (with-current-buffer ,original-buf
                         (goto-char ,original-point)
                         (insert output " ")
-                        (goto-char (point))))))
+                        (goto-char (point))))
+                    (message "Transcription complete!")))
                 (kill-buffer ,temp-buf)
                 (when (file-exists-p ,wav-file)
                   (delete-file ,wav-file)))
