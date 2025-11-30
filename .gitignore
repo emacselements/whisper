@@ -1,6 +1,0 @@
-# Backup files
-*.bak
-*.bak.*
-*~
-whisper-vocabulary.txt
-my-whisper-advanced.el
