@@ -102,6 +102,14 @@ and inserts the text at point."
          (vocab-prompt (my-whisper--get-vocabulary-prompt))
          (vocab-word-count (my-whisper--check-vocabulary-length)))
 
+    ;; Clean up any existing processes and files
+    (when (get-process "whisper-stt-fast")
+      (delete-process "whisper-stt-fast"))
+    (when (get-process "record-audio")
+      (delete-process "record-audio"))
+    (when (file-exists-p wav-file)
+      (delete-file wav-file))
+
     ;; Start recording audio
     (start-process "record-audio" nil "/bin/sh" "-c"
                    (format "sox -d -r 16000 -c 1 -b 16 %s --no-show-progress 2>/dev/null" wav-file))
@@ -114,7 +122,10 @@ and inserts the text at point."
         (while t (sit-for 1))
       (quit (interrupt-process "record-audio")))
 
-    (run-at-time 0.2 nil
+    ;; Give sox a moment to finish writing the file
+    (sleep-for 0.1)
+
+    (run-at-time 0.1 nil
                  (lambda ()
                    (message "Processing transcription, please wait...")))
 
@@ -126,12 +137,12 @@ and inserts the text at point."
                                     (replace-regexp-in-string "\"" "\\\\\"" vocab-prompt))
                           (format "~/whisper.cpp/build/bin/whisper-cli -m ~/whisper.cpp/models/ggml-base.en.bin -f %s -nt -np 2>/dev/null"
                                   wav-file)))
-           (proc (start-process "whisper-stt" temp-buf "/bin/sh" "-c" whisper-cmd)))
+           (proc (start-process "whisper-stt-fast" temp-buf "/bin/sh" "-c" whisper-cmd)))
       ;; Properly capture `temp-buf` using a lambda
       (set-process-sentinel
        proc
        `(lambda (proc event)
-          (when (string= event "finished\n")
+          (when (memq (process-status proc) '(exit signal))
             (when (buffer-live-p ,temp-buf)
               (let* ((output (string-trim (with-current-buffer ,temp-buf (buffer-string))))) ;; Trim excess whitespace
                 (if (string-empty-p output)
@@ -143,7 +154,9 @@ and inserts the text at point."
                       (goto-char (point))))
                   (message "Transcription complete!")))
               ;; Clean up temporary buffer
-              (kill-buffer ,temp-buf))))))))
+              (kill-buffer ,temp-buf)
+              (when (file-exists-p ,wav-file)
+                (delete-file ,wav-file)))))))))
 
 (defun my-whisper-transcribe ()
   "Record audio and transcribe using configurable Whisper model (accurate).
@@ -158,6 +171,14 @@ text at point."
          (vocab-prompt (my-whisper--get-vocabulary-prompt))
          (vocab-word-count (my-whisper--check-vocabulary-length)))
 
+    ;; Clean up any existing processes and files
+    (when (get-process "whisper-stt-accurate")
+      (delete-process "whisper-stt-accurate"))
+    (when (get-process "record-audio")
+      (delete-process "record-audio"))
+    (when (file-exists-p wav-file)
+      (delete-file wav-file))
+
     ;; Start recording audio
     (start-process "record-audio" nil "/bin/sh" "-c"
                    (format "sox -d -r 16000 -c 1 -b 16 %s --no-show-progress 2>/dev/null" wav-file))
@@ -170,7 +191,10 @@ text at point."
         (while t (sit-for 1))
       (quit (interrupt-process "record-audio")))
 
-    (run-at-time 0.2 nil
+    ;; Give sox a moment to finish writing the file
+    (sleep-for 0.1)
+
+    (run-at-time 0.1 nil
                  (lambda ()
                    (message "Processing transcription, please wait...")))
 
@@ -182,12 +206,12 @@ text at point."
                                     (replace-regexp-in-string "\"" "\\\\\"" vocab-prompt))
                           (format "~/whisper.cpp/build/bin/whisper-cli -m %s -f %s -nt -np 2>/dev/null"
                                   my-whisper-model-path wav-file)))
-           (proc (start-process "whisper-stt" temp-buf "/bin/sh" "-c" whisper-cmd)))
+           (proc (start-process "whisper-stt-accurate" temp-buf "/bin/sh" "-c" whisper-cmd)))
       ;; Properly capture `temp-buf` using a lambda
       (set-process-sentinel
        proc
        `(lambda (proc event)
-          (if (string= event "finished\n")
+          (if (memq (process-status proc) '(exit signal))
               (when (buffer-live-p ,temp-buf)
                 (let* ((output (string-trim (with-current-buffer ,temp-buf (buffer-string)))))
                   (if (string-empty-p output)
