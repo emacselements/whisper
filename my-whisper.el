@@ -64,27 +64,29 @@
 (defcustom my-whisper-executable (expand-file-name "~/whisper.cpp/build/bin/whisper-cli")
   "Path to the whisper-cli executable.
 This is the compiled Whisper.cpp command-line tool."
-  :type 'file
+  :type '(file :must-match t)
   :group 'my-whisper)
 
 (defcustom my-whisper-model-path (expand-file-name "~/whisper.cpp/models/ggml-medium.en.bin")
   "Path to the Whisper model to use for transcription.
 Larger models are more accurate but slower."
-  :type 'file
+  :type '(file :must-match t)
   :group 'my-whisper)
 
 (defcustom my-whisper-base-model-path (expand-file-name "~/whisper.cpp/models/ggml-base.en.bin")
   "Path to the Whisper base model for fast transcription.
 Used by `my-whisper-transcribe-fast'."
-  :type 'file
+  :type '(file :must-match t)
   :group 'my-whisper)
 
-(defcustom my-whisper-vocabulary-file (expand-file-name "~/.emacs.d/whisper-vocabulary.txt")
+(defcustom my-whisper-vocabulary-file (locate-user-emacs-file "whisper-vocabulary.txt")
   "Path to file containing vocabulary hints for Whisper.
 This should contain proper nouns, specialized terms, etc.
 The file should contain comma-separated words/phrases that Whisper
-should recognize."
-  :type 'file
+should recognize.
+Set to nil to disable vocabulary hints."
+  :type '(choice (const :tag "No vocabulary file" nil)
+                 (file :tag "Vocabulary file path"))
   :group 'my-whisper)
 
 (defun my-whisper--get-vocabulary-prompt ()
@@ -117,7 +119,7 @@ and inserts the text at point."
   (interactive)
   (let* ((original-buf (current-buffer))
          (original-point (point-marker))  ; Marker tracks position even if buffer changes
-         (wav-file "/tmp/whisper-recording.wav")
+         (wav-file (expand-file-name "whisper-recording.wav" (temporary-file-directory)))
          (temp-buf (generate-new-buffer " *Whisper Temp*"))
          (vocab-prompt (my-whisper--get-vocabulary-prompt))
          (vocab-word-count (my-whisper--check-vocabulary-length)))
@@ -190,7 +192,7 @@ text at point."
   (interactive)
   (let* ((original-buf (current-buffer))
          (original-point (point-marker))  ; Marker tracks position even if buffer changes
-         (wav-file "/tmp/whisper-recording.wav")
+         (wav-file (expand-file-name "whisper-recording.wav" (temporary-file-directory)))
          (temp-buf (generate-new-buffer " *Whisper Temp*"))
          (vocab-prompt (my-whisper--get-vocabulary-prompt))
          (vocab-word-count (my-whisper--check-vocabulary-length)))
