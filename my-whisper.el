@@ -3,7 +3,7 @@
 ;; Copyright (C) 2025 Raoul Comninos
 
 ;; Author: Raoul Comninos
-;; Version: 1.0.0
+;; Version: 1.0.1
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: convenience, speech, whisper, transcription
 ;; URL: https://github.com/emacselements/my-whisper
