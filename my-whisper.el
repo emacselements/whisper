@@ -67,6 +67,45 @@ This is the compiled Whisper.cpp command-line tool."
   :type '(file :must-match t)
   :group 'my-whisper)
 
+;; Optional, opt-in reliability settings (safe to remove as a block)
+;; --- Begin: Input device resilience options ---
+(defcustom my-whisper-input-source nil
+  "Optional PulseAudio source name to record from.
+When nil, uses the system default input (sox `-d`).
+Example: 'alsa_input.usb-YourMicName'."
+  :type '(choice (const :tag "Default input" nil)
+                 (string :tag "PulseAudio source name"))
+  :group 'my-whisper)
+
+(defcustom my-whisper-reset-default-source nil
+  "If non-nil, reset the default PulseAudio source before recording.
+This can fix first-try recording issues across different microphones."
+  :type 'boolean
+  :group 'my-whisper)
+
+(defcustom my-whisper-prewarm nil
+  "If non-nil, perform a 1s warm-up capture before recording.
+Helps avoid stale device state on first use."
+  :type 'boolean
+  :group 'my-whisper)
+
+(defun my-whisper--maybe-reset-default-source ()
+  "Optionally reset the default PulseAudio source (opt-in)."
+  (when my-whisper-reset-default-source
+    (message "Resetting input device (PulseAudio) ...")
+    (ignore-errors
+      (call-process "/bin/sh" nil nil nil "-c"
+                    "pactl suspend-source @DEFAULT_SOURCE@ 1; sleep 0.2; pactl suspend-source @DEFAULT_SOURCE@ 0"))))
+
+(defun my-whisper--maybe-prewarm ()
+  "Optionally do a short warm-up capture (opt-in)."
+  (when my-whisper-prewarm
+    (message "Pre-warming microphone for 1s ...")
+    (ignore-errors
+      (call-process "/bin/sh" nil nil nil "-c"
+                    "timeout 1 sox -d -r 16000 -c 1 -b 16 \"$(mktemp /tmp/whisper-warmup.XXXXXX.wav)\" --no-show-progress 2>/dev/null"))))
+;; --- End: Input device resilience options ---
+
 (defcustom my-whisper-model-path (expand-file-name "~/whisper.cpp/models/ggml-medium.en.bin")
   "Path to the Whisper model to use for transcription.
 Larger models are more accurate but slower."
@@ -132,9 +171,18 @@ and inserts the text at point."
     (when (file-exists-p wav-file)
       (delete-file wav-file))
 
-    ;; Start recording audio
-    (start-process "record-audio" nil "/bin/sh" "-c"
-                   (format "sox -d -r 16000 -c 1 -b 16 %s --no-show-progress 2>/dev/null" wav-file))
+    ;; Optional resilience steps
+    (my-whisper--maybe-reset-default-source)
+    (my-whisper--maybe-prewarm)
+    ;; Start recording audio (use PulseAudio source if provided)
+    (start-process
+     "record-audio" nil "/bin/sh" "-c"
+     (if (and my-whisper-input-source (not (string-empty-p my-whisper-input-source)))
+       (format "sox -t pulseaudio %s -r 16000 -c 1 -b 16 %s --no-show-progress 2>/dev/null"
+           (shell-quote-argument my-whisper-input-source)
+           (shell-quote-argument wav-file))
+       (format "sox -d -r 16000 -c 1 -b 16 %s --no-show-progress 2>/dev/null"
+           (shell-quote-argument wav-file))))
     ;; Inform user recording has started with vocabulary warning if needed
     (if (and vocab-word-count (> vocab-word-count 150))
         (message "Recording started (fast mode). Press C-g to stop. WARNING: Vocabulary file has %d words (max: 150)!" vocab-word-count)
@@ -205,9 +253,18 @@ text at point."
     (when (file-exists-p wav-file)
       (delete-file wav-file))
 
-    ;; Start recording audio
-    (start-process "record-audio" nil "/bin/sh" "-c"
-                   (format "sox -d -r 16000 -c 1 -b 16 %s --no-show-progress 2>/dev/null" wav-file))
+    ;; Optional resilience steps
+    (my-whisper--maybe-reset-default-source)
+    (my-whisper--maybe-prewarm)
+    ;; Start recording audio (use PulseAudio source if provided)
+    (start-process
+     "record-audio" nil "/bin/sh" "-c"
+     (if (and my-whisper-input-source (not (string-empty-p my-whisper-input-source)))
+       (format "sox -t pulseaudio %s -r 16000 -c 1 -b 16 %s --no-show-progress 2>/dev/null"
+           (shell-quote-argument my-whisper-input-source)
+           (shell-quote-argument wav-file))
+       (format "sox -d -r 16000 -c 1 -b 16 %s --no-show-progress 2>/dev/null"
+           (shell-quote-argument wav-file))))
     ;; Inform user recording has started with vocabulary warning if needed
     (if (and vocab-word-count (> vocab-word-count 150))
         (message "Recording started (accurate mode). Press C-g to stop. WARNING: Vocabulary file has %d words (max: 150)!" vocab-word-count)
