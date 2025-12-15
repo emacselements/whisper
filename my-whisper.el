@@ -4,7 +4,7 @@
 
 ;; Author: Raoul Comninos
 ;; Version: 1.0.1
-;; Package-Requires: ((emacs "25.1"))
+;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: convenience, speech, whisper, transcription
 ;; URL: https://github.com/emacselements/my-whisper
 ;; SPDX-License-Identifier: MIT
@@ -71,8 +71,8 @@ This is the compiled Whisper.cpp command-line tool."
 ;; --- Begin: Input device resilience options ---
 (defcustom my-whisper-input-source nil
   "Optional PulseAudio source name to record from.
-When nil, uses the system default input (sox `-d`).
-Example: 'alsa_input.usb-YourMicName'."
+When nil, uses the system default input (sox \=`-d\=').
+Example: \=`alsa_input.usb-YourMicName\='."
   :type '(choice (const :tag "Default input" nil)
                  (string :tag "PulseAudio source name"))
   :group 'my-whisper)
