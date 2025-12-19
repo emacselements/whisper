@@ -10,9 +10,9 @@ A simple Emacs package that provides speech-to-text functionality using Whisper.
 
 ## Demo Video
 
-[![Perfect Speech to Text in Emacs](https://img.youtube.com/vi/bTU9ctFtyBA/0.jpg)](https://youtu.be/bTU9ctFtyBA)
+[![Perfect Speech to Text in Emacs](https://img.youtube.com/vi/YNtrl9bkjyE/0.jpg)](https://youtube.com/shorts/YNtrl9bkjyE)
 
-**[Perfect Speech to Text in Emacs](https://youtu.be/bTU9ctFtyBA)** - See the package in action!
+**[Perfect Speech to Text in Emacs](https://youtube.com/shorts/YNtrl9bkjyE)** - See the package in action!
 
 ## Features
 
