@@ -4,7 +4,7 @@ If you find this project helpful, consider supporting it!
 
 [Donate via PayPal](https://www.paypal.com/paypalme/revrari)
 
-# My Whisper - Speech-to-Text for Emacs
+# Whisper - Speech-to-Text for Emacs
 
 A simple Emacs package that provides speech-to-text functionality using Whisper.cpp. Record audio directly from Emacs and have it transcribed and inserted at your cursor position.
 
@@ -71,7 +71,7 @@ Make sure the paths in the code match your installation:
 - Fast mode model: `~/whisper.cpp/models/ggml-base.en.bin`
 - Accurate mode model: `~/whisper.cpp/models/ggml-medium.en.bin`
 
-If you install Whisper.cpp in a different location, you'll need to update the paths in `my-whisper.el`.
+If you install Whisper.cpp in a different location, you'll need to update the paths in `whisper.el`.
 
 ## Installation
 
@@ -79,29 +79,29 @@ If you install Whisper.cpp in a different location, you'll need to update the pa
 
 1. Clone or download this repository:
    ```bash
-   git clone <your-repo-url> ~/.emacs.d/my-whisper
+   git clone <your-repo-url> ~/.emacs.d/whisper
    ```
 
 2. Add the following to your `init.el` or `.emacs` file:
    ```elisp
    ;; Add the package directory to load-path
-   (add-to-list 'load-path "~/.emacs.d/my-whisper")
+   (add-to-list 'load-path "~/.emacs.d/whisper")
 
    ;; Load the package
-   (require 'my-whisper)
+   (require 'whisper)
    ```
 
 ### Option 2: Direct File Installation
 
-1. Copy `my-whisper.el` to your Emacs configuration directory:
+1. Copy `whisper.el` to your Emacs configuration directory:
    ```bash
-   cp my-whisper.el ~/.emacs.d/
+   cp whisper.el ~/.emacs.d/
    ```
 
 2. Add the following to your `init.el`:
    ```elisp
    ;; Load the whisper package
-   (load-file "~/.emacs.d/my-whisper.el")
+   (load-file "~/.emacs.d/whisper.el")
    ```
 
 ### Option 3: Using use-package
@@ -109,10 +109,10 @@ If you install Whisper.cpp in a different location, you'll need to update the pa
 If you use `use-package`, add this to your `init.el`:
 
 ```elisp
-(use-package my-whisper
-  :load-path "~/.emacs.d/my-whisper"
-  :bind (("C-c v" . my-whisper-transcribe-fast)
-         ("C-c n" . my-whisper-transcribe)))
+(use-package whisper
+  :load-path "~/.emacs.d/whisper"
+  :bind (("C-c v" . whisper-transcribe-fast)
+         ("C-c n" . whisper-transcribe)))
 ```
 
 ## Usage
@@ -146,26 +146,26 @@ To change the key bindings, modify your `init.el`:
 
 ```elisp
 ;; Use different key bindings
-(global-set-key (kbd "C-c s") #'my-whisper-transcribe-fast)  ; Fast mode
-(global-set-key (kbd "C-c S") #'my-whisper-transcribe)       ; Accurate mode
+(global-set-key (kbd "C-c s") #'whisper-transcribe-fast)  ; Fast mode
+(global-set-key (kbd "C-c S") #'whisper-transcribe)       ; Accurate mode
 ```
 
 ### Custom Model Path
 
-To use a different model for accurate mode, set the `my-whisper-model-path` variable in your `init.el`:
+To use a different model for accurate mode, set the `whisper-model-path` variable in your `init.el`:
 
 ```elisp
 ;; Use a different model (e.g., large model for even better accuracy)
-(setq my-whisper-model-path "~/whisper.cpp/models/ggml-large.en.bin")
+(setq whisper-model-path "~/whisper.cpp/models/ggml-large.en.bin")
 ```
 
 ### Custom Paths
 
-If your Whisper.cpp installation is in a different location, you'll need to modify the paths in `my-whisper.el`:
+If your Whisper.cpp installation is in a different location, you'll need to modify the paths in `whisper.el`:
 
 ```elisp
 ;; Example: if whisper-cli is in /usr/local/bin/
-;; Edit the format strings in my-whisper.el from:
+;; Edit the format strings in whisper.el from:
 ;; "~/whisper.cpp/build/bin/whisper-cli -m ~/whisper.cpp/models/ggml-base.en.bin ..."
 ;; to:
 ;; "/usr/local/bin/whisper-cli -m /path/to/your/model.bin ..."
@@ -182,7 +182,7 @@ This transcription discusses classical Greek philosophy, including scholars and 
 
 **Custom vocabulary location:**
 ```elisp
-(setq my-whisper-vocabulary-file "~/Documents/my-vocabulary.txt")
+(setq whisper-vocabulary-file "~/Documents/my-vocabulary.txt")
 ```
 
 **For detailed guidance** on vocabulary formats, tips, domain-specific examples, and managing multiple vocabularies, see [VOCABULARY-GUIDE.md](VOCABULARY-GUIDE.md).
