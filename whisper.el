@@ -183,6 +183,9 @@ and inserts the text at point."
            (shell-quote-argument wav-file))
        (format "sox -d -r 16000 -c 1 -b 16 %s --no-show-progress 2>/dev/null"
            (shell-quote-argument wav-file))))
+    ;; Brief delay to allow audio pipeline to initialize
+    (message "Initializing microphone...")
+    (sleep-for 0.5)
     ;; Inform user recording has started with vocabulary warning if needed
     (if (and vocab-word-count (> vocab-word-count 150))
         (message "Recording started (fast mode). Press C-g to stop. WARNING: Vocabulary file has %d words (max: 150)!" vocab-word-count)
@@ -265,6 +268,9 @@ text at point."
            (shell-quote-argument wav-file))
        (format "sox -d -r 16000 -c 1 -b 16 %s --no-show-progress 2>/dev/null"
            (shell-quote-argument wav-file))))
+    ;; Brief delay to allow audio pipeline to initialize
+    (message "Initializing microphone...")
+    (sleep-for 0.5)
     ;; Inform user recording has started with vocabulary warning if needed
     (if (and vocab-word-count (> vocab-word-count 150))
         (message "Recording started (accurate mode). Press C-g to stop. WARNING: Vocabulary file has %d words (max: 150)!" vocab-word-count)
